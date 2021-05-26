@@ -16,38 +16,46 @@
     <title>Hello, world!</title>
   </head>
   <body>
-    <h1>서버에서 가져온 할 일 리스트</h1>
-    <%for(let i=0;i<posts.length;++i){%>
-      <div>글번호 : <%=posts[i]._id%></div>
-      <h3>할 일 제목: <%=posts[i].제목%></h3>
-      <p>할 일 날짜 : <%=posts[i].날짜%></p>
-      <button class="btn btn-danger mt-2 del" data-id="<%=posts[i]._id%>">DELETE</button>
-    <%}%>
-
+    <%- include('nav.html')%>
+    <h2>서버에서 가져온 할 일 리스트</h2>
+    <ul class=list-group>
+      <%for(let i=0;i<posts.length;++i){%>
+        <li class="list-group-item">
+          <a href="detail/<%=posts[i]._id%>" style="text-decoration: none; color:black;">
+            <div>글번호 : <%=posts[i]._id%></div>
+            <h3>할 일 제목: <%=posts[i].제목%></h3>
+            <p>할 일 날짜 : <%=posts[i].날짜%></p>
+          </a>
+          <a href="edit/<%=posts[i]._id%>"><button class="btn btn-primary">EDIT</button></a>
+            <button class="btn btn-danger del" data-id="<%=posts[i]._id%>">DELETE</button>
+          </li>
+      <%}%>
+    </ul>
+        
 
     <!-- slim 지운 jquery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
 
       $('.del').click((e)=>{
-        let num=e.target.dataset.id;
-        let 지금누른거=$(this);
+
         // 서버에 새로고침 없이 /delete 경로로 DELETE 요청
-        $.ajax({method:"DELETE",url:'/delete',data:{_id:num}}).done(function(결과){
+        $.ajax({method:"DELETE", url:'/delete', data:{_id:e.target.dataset.id}}).done(function(결과){
           // 요청이 성공하면 실행
-          console.log("삭제완료");
+          $(e.target).parent('li').fadeOut();
+          console.log("삭제완료 from list.ejs");
           
           // 1. 페이지 강제 새로고침 location.reload()
-
           // 2. 삭제 버튼 누른 요소 제거
-          지금누른거.parent('li').fadeOut();
           
         }).fail((a,b,c)=>{
           // 요청이 실패하면 실행
-          console.log("삭제실패");
+          console.log("삭제실패 from list.ejs");
           console.log(a,b,c);
 
         })
-      })
+      });
+
     </script>
     <!-- Optional JavaScript; choose one of the two! -->
 
