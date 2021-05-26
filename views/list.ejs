@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Bootstrap CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x"
+      crossorigin="anonymous"
+    />
+
+    <title>Hello, world!</title>
+  </head>
+  <body>
+    <h1>서버에서 가져온 할 일 리스트</h1>
+    <%for(let i=0;i<posts.length;++i){%>
+      <div>글번호 : <%=posts[i]._id%></div>
+      <h3>할 일 제목: <%=posts[i].제목%></h3>
+      <p>할 일 날짜 : <%=posts[i].날짜%></p>
+      <button class="btn btn-danger mt-2 del" data-id="<%=posts[i]._id%>">DELETE</button>
+    <%}%>
+
+
+    <!-- slim 지운 jquery -->
+    <script>
+
+      $('.del').click((e)=>{
+        let num=e.target.dataset.id;
+        let 지금누른거=$(this);
+        // 서버에 새로고침 없이 /delete 경로로 DELETE 요청
+        $.ajax({method:"DELETE",url:'/delete',data:{_id:num}}).done(function(결과){
+          // 요청이 성공하면 실행
+          console.log("삭제완료");
+          
+          // 1. 페이지 강제 새로고침 location.reload()
+
+          // 2. 삭제 버튼 누른 요소 제거
+          지금누른거.parent('li').fadeOut();
+          
+        }).fail((a,b,c)=>{
+          // 요청이 실패하면 실행
+          console.log("삭제실패");
+          console.log(a,b,c);
+
+        })
+      })
+    </script>
+    <!-- Optional JavaScript; choose one of the two! -->
+
+    <!-- Option 1: Bootstrap Bundle with Popper -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4"
+      crossorigin="anonymous"
+    ></script>
+
+    <!-- Option 2: Separate Popper and Bootstrap JS -->
+    <!--
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.min.js" integrity="sha384-Atwg2Pkwv9vp0ygtn1JAojH0nYbwNJLPhwyoVbhoPwBhjQPR5VtM2+xf0Uwh9KtT" crossorigin="anonymous"></script>
+    -->
+  </body>
+</html>
