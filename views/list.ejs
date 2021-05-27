@@ -31,6 +31,11 @@
           </li>
       <%}%>
     </ul>
+
+    <div class="container input-group my-3">
+      <input id='search-input' class="form-control">
+      <button id="search" class="input-group-append btn btn-primary">검색</button>
+    </div>
         
 
     <!-- slim 지운 jquery -->
@@ -52,9 +57,17 @@
           // 요청이 실패하면 실행
           console.log("삭제실패 from list.ejs");
           console.log(a,b,c);
-
         })
       });
+
+      $('#search').on('click',()=>{
+        const input = $("#search-input").val();
+        window.location.replace(`/search?value=${input}`)
+      });
+
+      let 자료={이름:'존',이름2:'폴'};
+      $.param(자료);
+      $(폼태그).serialize();
 
     </script>
     <!-- Optional JavaScript; choose one of the two! -->

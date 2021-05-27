@@ -22,6 +22,13 @@ app.use(session({ secret: "비밀코드", resave: true, saveUninitialized: false
 app.use(passport.initialize());
 app.use(passport.session());
 
+//app.use("/", require("./routes/shop./js"));
+app.use("/shop", require("./routes/shop.js"));
+
+const http = require("http").createServer(app);
+const { Server } = require("socket.io");
+const io = new Server(http);
+
 let db;
 // db 접속 완료되면 내부 함수 실행하여 8080에 nodejs 서버 띄운다
 MongoClient.connect("mongodb+srv://soldaAdmin:0570@cluster0323.ei5d3.mongodb.net/todoapp?retryWrites=true&w=majority", (에러, client) => {
@@ -35,7 +42,7 @@ MongoClient.connect("mongodb+srv://soldaAdmin:0570@cluster0323.ei5d3.mongodb.net
   //   console.log("저장완료");
   // });
 
-  app.listen(8080, function () {
+  http.listen(8080, function () {
     console.log("listening on 8080 '3'");
   });
 });
@@ -138,10 +145,11 @@ app.get("/fail", (req, res) => {
 // 아이디, 비밀번호 인증 세부
 passport.use(
   new LocalStrategy({ usernameField: "id", passwordField: "pw", session: true, passReqToCallback: false }, (입력한아이디, 입력한비밀번호, done) => {
-    console.log(입력한아이디, 입력한비밀번호);
     db.collection("login").findOne({ id: 입력한아이디 }, (err, result) => {
       if (err) return done(err);
-      if (!결과) return done(null, false, { message: "존재하지 않는 아이디입니다." });
+
+      if (!result) return done(null, false, { message: "존재하지 않는 아이디입니다." });
+
       if (입력한비밀번호 == result.pw) {
         return done(null, result);
       } else {
@@ -159,5 +167,98 @@ passport.serializeUser(function (user, done) {
 // 마이페이이지 접속시 동작
 // 세션 데이터를 가진 사람을 DB에서 찾는다
 passport.deserializeUser((아이디, done) => {
-  done(null, {});
+  db.collection("login").findOne({ id: 아이디 }, (err, result) => {
+    done(null, result);
+  });
+});
+
+app.get("/mypage", 로그인했니, (req, res) => {
+  res.render("mypage.ejs", { 사용자: req.user });
+});
+
+function 로그인했니(req, res, next) {
+  // pass.deserializeUser > done(null, result)
+  if (req.user) {
+    next();
+  } else {
+    res.send("로그인을 안하셨습니다!");
+  }
+}
+
+app.get("/search", (req, res) => {
+  const 검색조건 = [
+    {
+      $search: {
+        index: "titleSearch",
+        text: {
+          query: req.query.value,
+          path: ["제목", "날짜"],
+        },
+      },
+    },
+    { $sort: { _id: 1 } }, // -1은 내림차순
+  ];
+  //.aggreate(검색조건).toArray
+  db.collection("post")
+    .find({ $text: { $search: req.query.value } })
+    .toArray((err, result) => {
+      console.log("서치중", result);
+      res.render("search.ejs", { searchData: result });
+    });
+});
+
+let multer = require("multer");
+
+let storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "./public/image");
+  },
+  file: function (req, file, cb) {
+    cb(null, file.originalname);
+  },
+});
+
+let upload = multer({ storage: storage });
+
+app.get("/upload", (req, res) => {
+  res.render("upload.ejs");
+});
+
+// name of <input>
+app.post("/upload", upload.single("프로필"), (req, res) => {
+  res.send("업로드 완료");
+});
+
+app.get("/image/:이미지이름", (req, res) => {
+  res.sendFile(__dirname + "public/image/" + req.params.이미지이름);
+});
+
+app.get("/chat", (req, res) => {
+  res.render("chat.ejs");
+});
+
+io.on("connection", socket => {
+  console.log("연결되었습니다.");
+
+  socket.on("입력값", data => {
+    console.log("입력값 수신 완료 :", data);
+    io.emit("퍼트리기", data);
+  });
+});
+
+let chat1 = io.of("/채팅방1");
+chat1.on("connection", socket => {
+  console.log("채팅방1에 입장하셨습니다.");
+
+  let 방번호 = "";
+  socket.on("방들어가고싶음", data => {
+    socket.join(data);
+    방번호 = data;
+    console.log(`${방번호}에 입장하셨습니다.`);
+  });
+
+  socket.on("입력값", data => {
+    console.log("채팅방 입력값 수신 완료 :", data);
+    chat1.to(방번호).emit("퍼트리기", data);
+  });
 });
